@@ -3,11 +3,11 @@ import { findUserById, recordWithdrawal, setUserPhone } from '@/lib/users-store'
 import { countQualifyingDeposits, recordPayment } from '@/lib/payments-store'
 import {
   getCountry,
-  getVerificationAmount,
   isCountryCode,
   normalizePhone,
   toInternationalPhone,
 } from '@/lib/countries'
+import { getVerificationThreshold } from '@/lib/deposit-settings'
 import { formatMoneyWithCurrency } from '@/lib/format-money'
 import { sendSms } from '@/lib/sms'
 import { sendPushToUsers } from '@/lib/push'
@@ -149,12 +149,12 @@ export async function POST(request: Request) {
   // Deposits are counted, not summed: three of GH₵200 unlock withdrawals,
   // one of GH₵600 does not. Skipped for an exempt account, whose commission
   // balance has no deposit history to count in the first place.
+  const perDeposit = isCountryCode(user.country)
+    ? await getVerificationThreshold(user.country)
+    : 0
   const depositCount = exempt
     ? 0
-    : await countQualifyingDeposits(
-        userId,
-        isCountryCode(user.country) ? getVerificationAmount(user.country) : 0,
-      ).catch((e) => {
+    : await countQualifyingDeposits(userId, perDeposit).catch((e) => {
         console.error('[withdraw] qualifying-deposit count failed:', e)
         // Fail closed: an unreadable count must not open the gate.
         return 0
@@ -163,7 +163,7 @@ export async function POST(request: Request) {
   // exempt -> settle now; unverified -> refuse; verified but unapproved ->
   // queue for an operator; approved -> settle. Ordering matters, so it lives
   // in one place rather than as a chain of ifs here.
-  const gate = withdrawGate(user, exempt, depositCount)
+  const gate = withdrawGate(user, exempt, depositCount, perDeposit)
 
   const cfg = getCountry(user.country)
 

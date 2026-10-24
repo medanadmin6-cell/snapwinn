@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { findUserById } from '@/lib/users-store'
 import { recordPayment } from '@/lib/payments-store'
 import { chargeGhanaMomoV4 } from '@/lib/flutterwave-v4'
-import { getMinFirstDeposit } from '@/lib/countries'
+import { getMinDeposit } from '@/lib/deposit-settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'mobile money is Ghana-only' }, { status: 400 })
   }
 
-  const minDeposit = getMinFirstDeposit(user.country)
+  const minDeposit = await getMinDeposit(user.country)
   if (amount < minDeposit) {
     return NextResponse.json(
       { error: `minimum deposit is ${user.currency} ${minDeposit.toFixed(2)}` },

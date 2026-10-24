@@ -8,7 +8,8 @@ import {
   requestToPay,
   toMsisdn,
 } from '@/lib/momo'
-import { getCountry, getMinFirstDeposit, normalizePhone } from '@/lib/countries'
+import { getCountry, normalizePhone } from '@/lib/countries'
+import { getMinDeposit } from '@/lib/deposit-settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
   }
   const msisdn = toMsisdn(localPhone, cfg.dialCode)
 
-  const minDeposit = getMinFirstDeposit(user.country)
+  const minDeposit = await getMinDeposit(user.country)
   if (amount < minDeposit) {
     return NextResponse.json(
       { error: `minimum deposit is ${user.currency} ${minDeposit.toFixed(2)}` },

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { findUserById } from '@/lib/users-store'
 import { recordPayment } from '@/lib/payments-store'
-import { getCountry, getMinFirstDeposit } from '@/lib/countries'
+import { getCountry } from '@/lib/countries'
+import { getMinDeposit } from '@/lib/deposit-settings'
 import { supabaseServer } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
@@ -81,7 +82,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const minDeposit = getMinFirstDeposit(user.country)
+  const minDeposit = await getMinDeposit(user.country)
   if (amount < minDeposit) {
     return NextResponse.json(
       { error: `minimum deposit is ${user.currency} ${minDeposit.toFixed(2)}` },

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { findUserById } from '@/lib/users-store'
 import { countQualifyingDeposits } from '@/lib/payments-store'
-import { getVerificationAmount, getWithdrawQualifyCount, isCountryCode } from '@/lib/countries'
+import { getWithdrawQualifyCount, isCountryCode } from '@/lib/countries'
+import { getVerificationThreshold } from '@/lib/deposit-settings'
 import { userCanWithdraw } from '../../../../lib/can-withdraw'
 
 export const dynamic = 'force-dynamic'
@@ -23,7 +24,7 @@ export async function GET(
   // total — otherwise the panel and the gate tell the player different
   // things about the same requirement.
   const country = isCountryCode(user.country) ? user.country : null
-  const perDeposit = country ? getVerificationAmount(country) : 0
+  const perDeposit = country ? await getVerificationThreshold(country) : 0
   const depositsNeeded = country ? getWithdrawQualifyCount(country) : 0
   const depositsMade = country
     ? await countQualifyingDeposits(user.id, perDeposit).catch(() => 0)

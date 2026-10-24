@@ -76,6 +76,7 @@ export function withdrawGate(
   user: AppUser,
   exempt = false,
   depositCount = 0,
+  perDepositOverride?: number,
 ): WithdrawGate {
   // `exempt` is an approved partner. A bare link used to be enough, which
   // meant anyone who registered as a partner and linked a betting account
@@ -86,7 +87,10 @@ export function withdrawGate(
 
   const country = isCountryCode(user.country) ? user.country : null
   const need = country ? getWithdrawQualifyCount(country) : 0
-  const perDeposit = country ? getVerificationAmount(country) : 0
+  // The admin can change the threshold at runtime, so the caller passes the
+  // value it counted deposits with; the static config is only a fallback.
+  const perDeposit =
+    perDepositOverride ?? (country ? getVerificationAmount(country) : 0)
 
   // Counted, not summed. One large payment is not the same as several: the
   // old total gate let a single deposit clear the whole requirement.

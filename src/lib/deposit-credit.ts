@@ -23,7 +23,8 @@ import {
 import { creditCommission, findSubAdminById } from '@/lib/sub-admins-store'
 import { type AppUser } from '@/lib/domain-types'
 import { readCommissionConfig, resolveRate } from '@/lib/commission-config'
-import { getVerificationAmount, isCountryCode, toInternationalPhone } from '@/lib/countries'
+import { isCountryCode, toInternationalPhone } from '@/lib/countries'
+import { getVerificationThreshold } from '@/lib/deposit-settings'
 import { formatMoneyWithCurrency } from '@/lib/format-money'
 import { sendSms } from '@/lib/sms'
 
@@ -89,7 +90,7 @@ export async function applyDepositCredit(
   if (!result) return null
 
   let user = result.user
-  const verificationThreshold = getVerificationAmount(userBefore.country)
+  const verificationThreshold = await getVerificationThreshold(userBefore.country)
 
   // First-deposit welcome bonus — one-time, credited on the very first
   // confirmed deposit. Pure bonus: does NOT count toward verification or

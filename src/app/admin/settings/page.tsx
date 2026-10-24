@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { AdminCommissionConfig } from '@/components/admin-commission-config'
 
 interface StatusResponse {
   env: { odds_api_key: boolean; admin_password: boolean; node_env: string }
@@ -87,6 +88,10 @@ export default function AdminSettingsPage() {
       )}
 
       <DepositAccountCard />
+
+      <MinDepositCard />
+
+      <AdminCommissionConfig />
 
       {loading && !status && (
         <div className="space-y-3">
@@ -276,6 +281,96 @@ function DepositAccountCard() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="SnapWin"
                   className="w-full h-10 px-3 rounded-md bg-secondary border border-border text-sm"
+                />
+              </div>
+            </div>
+            {msg && <p className="text-xs text-success flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5" /> {msg}</p>}
+            {err && <p className="text-xs text-destructive flex items-center gap-1.5"><XCircle className="w-3.5 h-3.5" /> {err}</p>}
+            <div className="flex justify-end">
+              <Button onClick={() => void save()} disabled={saving} className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                Save
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function MinDepositCard() {
+  const [gh, setGh] = useState('')
+  const [ng, setNg] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [msg, setMsg] = useState<string | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/admin/settings/min-deposit', { cache: 'no-store' })
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d.GH === 'number') setGh(String(d.GH))
+        if (typeof d.NG === 'number') setNg(String(d.NG))
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  const save = async () => {
+    setSaving(true); setMsg(null); setErr(null)
+    try {
+      const res = await fetch('/api/admin/settings/min-deposit', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ GH: gh, NG: ng }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`)
+      if (typeof data.GH === 'number') setGh(String(data.GH))
+      if (typeof data.NG === 'number') setNg(String(data.NG))
+      setMsg('Saved — every deposit screen and gateway now enforces this minimum.')
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <section className="bg-card border border-border rounded-xl overflow-hidden shadow-card">
+      <header className="px-4 py-3 border-b border-border">
+        <h2 className="font-semibold text-title">Minimum deposit</h2>
+        <p className="text-xs text-muted-foreground">
+          Smallest deposit the gateways accept. It is also the per-deposit size that counts
+          toward withdrawal verification. Changes apply immediately — no redeploy.
+        </p>
+      </header>
+      <div className="p-4 space-y-3">
+        {loading ? (
+          <Skeleton className="h-10 rounded-lg" />
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Ghana (GHS)</label>
+                <input
+                  value={gh}
+                  onChange={(e) => setGh(e.target.value)}
+                  placeholder="300"
+                  inputMode="decimal"
+                  className="w-full h-10 px-3 rounded-md bg-secondary border border-border text-sm font-mono tabular-nums"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">Nigeria (NGN)</label>
+                <input
+                  value={ng}
+                  onChange={(e) => setNg(e.target.value)}
+                  placeholder="30000"
+                  inputMode="decimal"
+                  className="w-full h-10 px-3 rounded-md bg-secondary border border-border text-sm font-mono tabular-nums"
                 />
               </div>
             </div>

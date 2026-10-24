@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { findUserById } from '@/lib/users-store'
 import { recordPayment } from '@/lib/payments-store'
 import { chargeMobileMoney, type MobileMoneyProvider } from '@/lib/paystack'
-import { getMinFirstDeposit, normalizePhone } from '@/lib/countries'
+import { normalizePhone } from '@/lib/countries'
+import { getMinDeposit } from '@/lib/deposit-settings'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,7 +65,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const minDeposit = getMinFirstDeposit('GH')
+  const minDeposit = await getMinDeposit('GH')
   if (amount < minDeposit) {
     return NextResponse.json(
       { error: `minimum deposit is GHS ${minDeposit.toFixed(2)}` },

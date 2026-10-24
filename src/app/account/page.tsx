@@ -456,6 +456,20 @@ function PaymentModal({
   const [copiedNum, setCopiedNum] = useState<string | null>(null);
   const cc = isCurrencyCode(user.currency) ? user.currency : "GHS";
   const userCountry = getCountryForCurrency(cc).code;
+  // The admin can change the minimum deposit at runtime (/admin/settings), so
+  // ask the server for the live value; the compiled default fills the gap
+  // until (or if) that fetch lands.
+  const [minOverride, setMinOverride] = useState<number | null>(null);
+  useEffect(() => {
+    fetch(`/api/settings/deposit?country=${userCountry}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d.minDeposit === "number" && d.minDeposit > 0) {
+          setMinOverride(d.minDeposit);
+        }
+      })
+      .catch(() => {});
+  }, [userCountry]);
   // GH uses Moolre's automated checkout; other countries use the manual
   // pay-an-agent + upload-screenshot flow.
   const useMoolre = getCountryForCurrency(cc).gateway === "moolre";
@@ -489,7 +503,7 @@ function PaymentModal({
   // agent-account + screenshot UI: the player pays on the gateway page and we
   // credit on return.
   const useHostedCheckout = useMoolre || useKorapay || useFlutterwaveHosted;
-  const minDeposit = getMinFirstDeposit(userCountry);
+  const minDeposit = minOverride ?? getMinFirstDeposit(userCountry);
   // Show the deposit accounts for the user's country; fall back to all if none
   // are configured for their country (so deposits are never blocked).
   const byCountry = DEPOSIT_ACCOUNTS.filter((a) => a.country === userCountry);
