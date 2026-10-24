@@ -146,7 +146,7 @@ export async function POST(request: Request) {
     subAdminApproved: Boolean(linkedSubAdmin?.approved),
   })
 
-  // Deposits are counted, not summed: three of GH₵200 unlock withdrawals,
+  // Deposits are counted, not summed: three of GH₵300 unlock withdrawals,
   // one of GH₵600 does not. Skipped for an exempt account, whose commission
   // balance has no deposit history to count in the first place.
   const perDeposit = isCountryCode(user.country)
