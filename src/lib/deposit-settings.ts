@@ -20,14 +20,20 @@ export async function getMinDeposit(country: CountryCode): Promise<number> {
   return staticMinFirstDeposit(country)
 }
 
+export function verificationAmountKey(country: CountryCode): string {
+  return `verification_amount_${country}`
+}
+
 /**
- * Per-deposit verification threshold. Driven by the same admin setting as the
- * deposit minimum: the two are kept equal everywhere in countries.ts, because
- * verification payments go through the normal deposit flow — a threshold
- * below the minimum would ask players for a deposit the gateway then rejects.
+ * Per-deposit verification threshold — its own setting, independent of the
+ * deposit minimum (GH verifies on 300+ deposits while accepting 200 ones).
+ * Keep it at or above the minimum: verification payments go through the
+ * normal deposit flow, so a threshold below the minimum is harmless, but a
+ * minimum above the threshold would let sub-threshold deposits through that
+ * then don't count.
  */
 export async function getVerificationThreshold(country: CountryCode): Promise<number> {
-  const n = Number(await getSetting(minDepositKey(country)))
+  const n = Number(await getSetting(verificationAmountKey(country)))
   if (Number.isFinite(n) && n > 0) return n
   return staticVerificationAmount(country)
 }

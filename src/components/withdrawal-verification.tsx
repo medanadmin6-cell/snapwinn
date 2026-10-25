@@ -9,7 +9,7 @@
  *
  * Two separate conditions, shown separately because they are cleared in
  * different ways:
- *   1. a number of qualifying deposits (e.g. 3 of GHS 300+ for Ghana)
+ *   1. a number of qualifying deposits (e.g. 4 of GHS 300+ for Ghana)
  *   2. an operator releasing the account for payouts
  *
  * The first is COUNTED, not summed, and the counts come from the server so

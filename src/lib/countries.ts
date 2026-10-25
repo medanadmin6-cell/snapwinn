@@ -77,8 +77,11 @@ const COUNTRIES: Record<CountryCode, CountryConfig> = {
     kycLabel: 'Ghana Card number',
     kycPlaceholder: 'GHA-XXXXXXXXX-X',
     kycError: 'Ghana Card number is required (format: GHA-XXXXXXXXX-X)',
-    minFirstDeposit: 300,
+    minFirstDeposit: 200,
     verificationAmount: 300,
+    // Withdrawals unlock after FOUR deposits of GHS 300+, even though the
+    // ordinary deposit minimum is lower (200).
+    withdrawQualifyCount: 4,
     withdrawQualifyTotal: 848,
     gateway: 'edibytes',
     payoutTarget: 'mobile',

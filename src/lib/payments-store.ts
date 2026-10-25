@@ -114,8 +114,8 @@ export async function listPaymentsForUser(userId: string): Promise<PaymentRecord
 /**
  * How many settled deposits of at least `minAmount` this player has made.
  *
- * The withdrawal gate counts deposits rather than summing them: three
- * payments of GH₵300 unlock it, one of GH₵900 does not. Only `success` rows
+ * The withdrawal gate counts deposits rather than summing them: four
+ * payments of GH₵300 unlock it, one of GH₵1200 does not. Only `success` rows
  * count, so a pending or refused attempt never moves a player along.
  *
  * Withdrawals live in the same table and are told apart by metadata.type, as

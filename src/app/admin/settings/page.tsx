@@ -343,8 +343,8 @@ function MinDepositCard() {
       <header className="px-4 py-3 border-b border-border">
         <h2 className="font-semibold text-title">Minimum deposit</h2>
         <p className="text-xs text-muted-foreground">
-          Smallest deposit the gateways accept. It is also the per-deposit size that counts
-          toward withdrawal verification. Changes apply immediately — no redeploy.
+          Smallest deposit the gateways accept. Changes apply immediately — no redeploy.
+          (Withdrawal verification is separate: 4 deposits of GHS 300+.)
         </p>
       </header>
       <div className="p-4 space-y-3">
