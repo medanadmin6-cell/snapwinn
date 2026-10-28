@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { X, Trash2, Ticket, Zap, ShieldCheck, ChevronUp, ChevronRight, Loader2, LogIn, BookmarkPlus, Copy, Check, Share2 } from "lucide-react";
+import { X, Trash2, Ticket, Zap, ShieldCheck, ChevronRight, Loader2, LogIn, BookmarkPlus, Copy, Check, Share2 } from "lucide-react";
 import { useSlip, totalOdds } from "@/lib/store";
 import type { Selection } from "@/lib/types";
 import { getUserId } from "@/lib/user-session";
@@ -564,18 +564,16 @@ export function MobileBetSlip() {
 
   return (
     <>
-      {/* collapsed bar */}
+      {/* floating slip button — appears once a selection is picked */}
       {count > 0 && !mobileOpen && (
         <button
           onClick={() => setMobileOpen(true)}
-          className="xl:hidden fixed bottom-[68px] left-3 right-3 z-40 flex items-center justify-between rounded-2xl px-4 py-3 grad-brand text-[var(--color-on-brand)] shadow-[0_12px_40px_-10px_rgba(249,115,22,.7)] animate-rise"
+          aria-label={`Open bet slip — ${count} selections at ${odds.toFixed(2)}`}
+          className="xl:hidden fixed bottom-[76px] right-4 z-40 grid place-items-center w-14 h-14 rounded-full grad-brand text-[var(--color-on-brand)] shadow-[0_12px_40px_-8px_rgba(249,115,22,.8)] active:scale-95 transition animate-rise"
         >
-          <span className="flex items-center gap-2 font-display font-bold text-[13px]">
-            <span className="num bg-[var(--color-ink)]/25 rounded-full min-w-[20px] h-5 grid place-items-center px-1.5 text-[11px]">{count}</span>
-            Bet Slip
-          </span>
-          <span className="flex items-center gap-2 num text-[12px] font-bold">
-            @ {odds.toFixed(2)} <ChevronUp size={16} />
+          <Ticket size={23} />
+          <span className="absolute -top-1 -right-1 num text-[11px] font-bold bg-[var(--color-surface)] text-[var(--color-ink)] border border-[var(--color-line)] rounded-full min-w-[21px] h-[21px] grid place-items-center px-1 shadow">
+            {count}
           </span>
         </button>
       )}
