@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { X, Trash2, Ticket, Zap, ShieldCheck, ChevronRight, Loader2, LogIn, BookmarkPlus, Copy, Check, Share2 } from "lucide-react";
@@ -557,19 +557,84 @@ export function DesktopBetSlip() {
 }
 
 /* Mobile bottom drawer */
+const FAB_SIZE = 56;
+const FAB_POS_KEY = "slip-fab-pos";
+
 export function MobileBetSlip() {
   const { selections, mobileOpen, setMobileOpen } = useSlip();
   const odds = totalOdds(selections);
   const count = selections.length;
 
+  // Draggable floating button: `pos` is its top-left corner once the user has
+  // moved it; null means the default bottom-right spot. A tap (< 6px of
+  // movement) opens the slip, a drag repositions and is remembered.
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const fabRef = useRef<HTMLButtonElement>(null);
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+  const movedRef = useRef(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(FAB_POS_KEY);
+      if (saved) {
+        const p = JSON.parse(saved) as { x: number; y: number };
+        if (Number.isFinite(p.x) && Number.isFinite(p.y)) setPos(clampToViewport(p));
+      }
+    } catch {}
+  }, []);
+
+  function clampToViewport(p: { x: number; y: number }) {
+    return {
+      x: Math.min(Math.max(8, p.x), window.innerWidth - FAB_SIZE - 8),
+      y: Math.min(Math.max(8, p.y), window.innerHeight - FAB_SIZE - 8),
+    };
+  }
+
+  function onFabPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
+    const el = fabRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: r.left, origY: r.top };
+    movedRef.current = false;
+    el.setPointerCapture(e.pointerId);
+  }
+
+  function onFabPointerMove(e: React.PointerEvent<HTMLButtonElement>) {
+    const d = dragRef.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!movedRef.current && Math.hypot(dx, dy) < 6) return;
+    movedRef.current = true;
+    setPos(clampToViewport({ x: d.origX + dx, y: d.origY + dy }));
+  }
+
+  function onFabPointerUp() {
+    dragRef.current = null;
+    if (movedRef.current) {
+      setPos((p) => {
+        if (p) {
+          try { localStorage.setItem(FAB_POS_KEY, JSON.stringify(p)); } catch {}
+        }
+        return p;
+      });
+    }
+  }
+
   return (
     <>
-      {/* floating slip button — appears once a selection is picked */}
-      {count > 0 && !mobileOpen && (
+      {/* floating slip button — always on screen, badge counts the picks */}
+      {!mobileOpen && (
         <button
-          onClick={() => setMobileOpen(true)}
+          ref={fabRef}
+          onPointerDown={onFabPointerDown}
+          onPointerMove={onFabPointerMove}
+          onPointerUp={onFabPointerUp}
+          onPointerCancel={onFabPointerUp}
+          onClick={() => { if (!movedRef.current) setMobileOpen(true); }}
           aria-label={`Open bet slip — ${count} selections at ${odds.toFixed(2)}`}
-          className="xl:hidden fixed bottom-[76px] right-4 z-40 grid place-items-center w-14 h-14 rounded-full grad-brand text-[var(--color-on-brand)] shadow-[0_12px_40px_-8px_rgba(249,115,22,.8)] active:scale-95 transition animate-rise"
+          style={pos ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : undefined}
+          className="xl:hidden fixed bottom-[76px] right-4 z-40 grid place-items-center w-14 h-14 rounded-full grad-brand text-[var(--color-on-brand)] shadow-[0_12px_40px_-8px_rgba(249,115,22,.8)] active:scale-95 transition-transform touch-none select-none"
         >
           <Ticket size={23} />
           <span className="absolute -top-1 -right-1 num text-[11px] font-bold bg-[var(--color-surface)] text-[var(--color-ink)] border border-[var(--color-line)] rounded-full min-w-[21px] h-[21px] grid place-items-center px-1 shadow">
