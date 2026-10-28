@@ -154,9 +154,28 @@ export async function findBetByCode(code: string): Promise<PlacedBet | null> {
     .eq('code', upper)
     .maybeSingle()
   if (error) throw new Error(`bets.findByCode: ${error.message}`)
-  if (!data) return null
-  const selectionsByBet = await loadSelectionsFor([data.id])
-  return rowToBet(data as BetRow, selectionsByBet.get(data.id) ?? [])
+  let row = data as BetRow | null
+
+  // The won-splash and ticket page print a 17-char "Verify Code" — the first
+  // 17 hex chars of the bet UUID (see verifyCodeFor in bets-adapter.ts) — so
+  // that is what players type into /verify. Resolve it by UUID range: the
+  // 17 known hex digits bound the id between <prefix>0… and <prefix>f….
+  if (!row && /^[0-9A-F]{17}$/.test(upper)) {
+    const h = upper.toLowerCase()
+    const prefix = `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 17)}`
+    const { data: byId, error: idErr } = await supabaseServer()
+      .from('bets')
+      .select('*')
+      .gte('id', `${prefix}000-000000000000`)
+      .lte('id', `${prefix}fff-ffffffffffff`)
+      .limit(1)
+    if (idErr) throw new Error(`bets.findByCode: ${idErr.message}`)
+    row = (byId?.[0] ?? null) as BetRow | null
+  }
+
+  if (!row) return null
+  const selectionsByBet = await loadSelectionsFor([row.id])
+  return rowToBet(row, selectionsByBet.get(row.id) ?? [])
 }
 
 export async function addBet(bet: PlacedBet): Promise<void> {
